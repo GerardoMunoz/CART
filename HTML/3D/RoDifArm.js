@@ -1,4 +1,6 @@
-class RoDifArm {
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
+
+export class RoDifArm {
     constructor(scene, bus, options = {}) {
         this.bus = bus
 
@@ -42,6 +44,15 @@ class RoDifArm {
 
         this._build();
 
+        const beat = 1;
+        const n_beats = 5;
+        const tiempo = n_beats * beat;
+        const d = 1;
+        const R = 2.5;
+        const omega = Math.PI / tiempo;
+        const vel_lin = omega * R;
+
+
         this.sequences = {"ymca":[
           { v: 1, w: 0, alpha0: 0, time: 2 },
           { v: 0, w: -Math.PI / 4, alpha0: -Math.PI / 2, alpha1: 0, time: 2 },
@@ -55,7 +66,19 @@ class RoDifArm {
             time: 2,
           },
           { v: -vel_lin, w: omega, time: tiempo },
-        ]};
+          /////////////////////////////////////////////////////////
+          { v: 1, w: 0, alpha0: 0, time: 2 },
+          {
+            v: 0,
+            w: -Math.PI / 4,
+            alpha0: Math.PI / 2,
+            alpha1: (6 * Math.PI) / 16,
+            alpha2: -(6 * Math.PI) / 16,
+            time: 2,
+          },
+          { v: -vel_lin, w: omega, time: tiempo },
+          { v: 0, w: 0, alpha0: -Math.PI / 2, alpha1: 0, alpha2: 0, time: 2 },
+          { v: vel_lin, w: omega, time: tiempo },        ]};
         this.sequence = this.sequences["ymca"];
         this.currentStep = null;
         this.timeLeft = 0;

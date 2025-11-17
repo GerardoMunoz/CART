@@ -160,6 +160,10 @@
     <section class="panel" id="panel-messages">
       <h3>Mensajes</h3>
 
+      <label>Prefijo del tópico</label>
+      <input id="topicPrefix" value="UDFJC/emb1/robot0">
+
+
       <label>Tópico</label>
       <input id="msgTopic" value="debug/msg">
 
@@ -195,21 +199,25 @@
   document.getElementById("btnPub").onclick = () => {
     if (!ws || ws.readyState != 1) return alert("WS no conectado");
 
-    const topic = document.getElementById("msgTopic").value;
+    const prefix = document.getElementById("topicPrefix").value.trim();
+    const sufix = document.getElementById("msgTopic").value;
+    const topic = `${prefix}/${sufix}`;
     const data = JSON.parse(document.getElementById("msgPayload").value);
 
     const obj = { action: "PUB", topic, data };
     ws.send(JSON.stringify(obj));
-    addLog(topic, "PUB enviado");
+    addLog(fullTopic, "PUB enviado");
   };
 
   document.getElementById("btnSub").onclick = () => {
     if (!ws || ws.readyState != 1) return alert("WS no conectado");
 
-    const topic = document.getElementById("msgTopic").value;
+    const prefix = document.getElementById("topicPrefix").value.trim();
+    const sufix = document.getElementById("msgTopic").value;
+    const topic = `${prefix}/${sufix}`;
     const obj = { action: "SUB", topic };
     ws.send(JSON.stringify(obj));
-    addLog(topic, "SUB enviado");
+    addLog(fullTopic, "SUB enviado");
   };
 
   </script>
@@ -257,7 +265,15 @@
   }
 
   bus.subscribe("*", (topic, msg) => {
-    addLog(topic,  Object.keys(msg) );
+    console.log('bus.subscribe',msg)
+    if (typeof msg === 'object'){
+        addLog(topic,  Object.keys(msg) );
+    }
+    else {
+        addLog(topic, msg );
+    }
+
+   
   });
 
   </script>
@@ -280,8 +296,9 @@
   const canvas = document.getElementById("cam");
   const ctx = canvas.getContext("2d");
   const W = 160, H = 120;
+  const camera_prefix = document.getElementById("topicPrefix").value.trim();
 
-bus.subscribe("camera/frame", (payload) => {
+bus.subscribe(camera_prefix+"/camera/frame", (payload) => {
     let msg=payload;
 
     const w = msg.w;
@@ -327,14 +344,16 @@ bus.subscribe("camera/frame", (payload) => {
     <!-- ========================================================= -->
     <section class="panel" id="panel-gemelo">
       <h3>Gemelo</h3>
-      <div id="render1"></div>
+      <input id="coreoName" value="ymca">
+      <button id="btnStartCoreo">Iniciar Coreografía</button>
+      <div id="render1" style="width:100%; height:300px;"></div>
       <!--canvas id="canvas-gemelo" width="130" height="130"></canvas-->
       <!--p id="camInfo"></p-->
     </section>
 
 
 
-  <script>
+  <script type="module">
   /* ============================================================
      Gemelo virtual
   ============================================================ */
@@ -360,38 +379,31 @@ const world = new CorridorScene(document.getElementById("render1"));
   ///////////////////// Robots
     const n_bots =10
     const n_robot = 0
-    const beat = 1;
-    const n_beats = 5;
-    const tiempo = n_beats * beat;
-    const d = 1;
-    const R = 2.5;
-    const omega = Math.PI / tiempo;
-    const vel_lin = omega * R;
-    const bus=null
+    //const bus=null
 
     const robot = new RoDifArm(world.scene, bus, { x: (n_robot - n_bots / 2) * 5, y: 0 });
 
-function set_sequences(){
+// function set_sequences(){
 
-        robot.addSequence("ymca",[
-          { v: 1, w: 0, alpha0: 0, time: 2 },
-          { v: 0, w: -Math.PI / 4, alpha0: -Math.PI / 2, alpha1: 0, time: 2 },
-          { v: vel_lin, w: omega, time: tiempo },
-          {
-            v: 0,
-            w: 0,
-            alpha0: Math.PI / 2,
-            alpha1: (6 * Math.PI) / 16,
-            alpha2: -(6 * Math.PI) / 16,
-            time: 2,
-          },
-          { v: -vel_lin, w: omega, time: tiempo },
-        ]);
+//         robot.addSequence("ymca",[
+//           { v: 1, w: 0, alpha0: 0, time: 2 },
+//           { v: 0, w: -Math.PI / 4, alpha0: -Math.PI / 2, alpha1: 0, time: 2 },
+//           { v: vel_lin, w: omega, time: tiempo },
+//           {
+//             v: 0,
+//             w: 0,
+//             alpha0: Math.PI / 2,
+//             alpha1: (6 * Math.PI) / 16,
+//             alpha2: -(6 * Math.PI) / 16,
+//             time: 2,
+//           },
+//           { v: -vel_lin, w: omega, time: tiempo },
+//         ]);
       
-  }
-    let lastTime = performance.now();
-    const keys = {};
-    selectedRobot = robot
+//   }
+//     let lastTime = performance.now();
+//     const keys = {};
+//    selectedRobot = robot
     
     //camera2.position.set(0, 25, 25);
     //camera2.lookAt(0, 0, 0);
@@ -402,20 +414,20 @@ function set_sequences(){
 
     ////////////// Animación  
 
-    animate();
-    function animate() {
-      requestAnimationFrame(animate);
+    // animate();
+    // function animate() {
+    //   requestAnimationFrame(animate);
 
-      const now = performance.now();
-      const deltaTime = (now - lastTime) / 1000;
-      lastTime = now;
-
-     
-      robot.update(deltaTime);
+    //   const now = performance.now();
+    //   const deltaTime = (now - lastTime) / 1000;
+    //   lastTime = now;
 
      
-      renderer1.render(scene, camera1);//Global
-    }
+    //   robot.update(deltaTime);
+
+     
+    //   renderer1.render(scene, camera1);//Global
+    // }
 
     //////////////7 Help Func
 
